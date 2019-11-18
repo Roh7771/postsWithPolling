@@ -28,7 +28,7 @@ textEl.addEventListener('input', e => {
     localStorage.setItem('text', e.currentTarget.value);
 })
 const selectEl = formEl.querySelector('[data-type=select]');
-selectEl.value = localStorage.getItem('type');
+selectEl.value = localStorage.getItem('type') || 'Обычный';
 selectEl.addEventListener('input', e => {
     localStorage.setItem('type', e.currentTarget.value);
 })
@@ -66,9 +66,10 @@ addNewPostButonEl.addEventListener('click', e => {
 rootEl.appendChild(formEl);
 
 const addFreshPostsButtonEl = document.createElement('button');
-addFreshPostsButtonEl.className = 'btn btn-primary d-block mx-auto mt-2 mb-2 d-none';
+addFreshPostsButtonEl.className = 'btn btn-primary mx-auto mt-2 mb-2 d-none';
 addFreshPostsButtonEl.innerHTML = 'Свежие посты!';
 addFreshPostsButtonEl.addEventListener('click', () => {
+    addFreshPostsButtonEl.classList.remove('d-block');
     addFreshPostsButtonEl.classList.add('d-none');
     addFreshPosts();
 });
@@ -295,7 +296,8 @@ setInterval(() => {
         ).then(
             data => {
                 if (data) {
-                    addFreshPostsButtonEl.classList.remove('invisible');
+                    addFreshPostsButtonEl.classList.remove('d-none');
+                    addFreshPostsButtonEl.classList.add('d-block');
                 };
             }
         ).catch(error => {
