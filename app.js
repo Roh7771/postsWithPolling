@@ -125,21 +125,23 @@ function oldPostsRender(data) {
         return b.id - a.id
     });
 
-    if (data.length < 3) {
-        addOldPostsButtonEl.classList.add('invisible');
+    if (data.length < 5) {
+        addOldPostsButtonEl.classList.add('d-none');
+        addOldPostsButtonEl.classList.remove('d-block');
     } else {
-        fetch(`${baseUrl}/posts/check/${data[data.length - 1].id}`)
+        fetch(`${baseUrl}/posts/old-posts-check/${data[data.length - 1].id}`)
             .then(
                 response => {
                     if (!response.ok) {
                         throw new Error(response.statusText);
                     }
-                    return response.json();
+                    return response.text();
                 },
             ).then(
                 data => {
-                    if (data) {
-                        addOldPostsButtonEl.classList.add('invisible')
+                    if (data === 'true') {
+                        addOldPostsButtonEl.classList.add('d-none');
+                        addOldPostsButtonEl.classList.remove('d-block');
                     };
                 }
             ).catch(error => {
@@ -181,7 +183,6 @@ function createPost(item) {
                     <p class="card-text">${item.text}</p>
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
-                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -192,7 +193,6 @@ function createPost(item) {
                 <div class="card-body">
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
-                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -205,7 +205,6 @@ function createPost(item) {
                 <div class="card-body">
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
-                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -216,7 +215,6 @@ function createPost(item) {
                 <div class="card-body">
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
-                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -226,79 +224,51 @@ function createPost(item) {
 
     newPostEl.addEventListener('click', e => {
         if (e.target.dataset.action === 'like') {
-            fetch(`${baseUrl}/posts/like/${item.id}`, {
-                method: 'POST'
-            }).then(
-                response => {
-                    if (!response.ok) {
-                        throw new Error(response.statusText);
-                    }
-                    return response.text();
-                },
-            ).then(
-                data => {
-                    likeButtonEl.innerHTML = `❤ ${data}`;
-                }
-            ).catch(error => {
-                console.log(error);
-            })
+            likesHandler('like', item.id, likeButtonEl);
         } else if (e.target.dataset.action === 'dislike') {
-            fetch(`${baseUrl}/posts/dislike/${item.id}`, {
-                method: 'POST'
-            }).then(
-                response => {
-                    if (!response.ok) {
-                        throw new Error(response.statusText);
-                    }
-                    return response.text();
-                }
-            ).then(
-                data => {
-                    likeButtonEl.innerHTML = `❤ ${data}`;
-                }
-            ).catch(error => {
-                console.log(error);
-            });
-        } else if (e.target.dataset.action === 'delete') {
-            fetch(`${baseUrl}/posts/${item.id}`, {
-                method: 'DELETE'
-            }).then(
-                response => {
-                    if (!response.ok) {
-                        throw new Error(response.statusText);
-                    }
-                },
-            ).catch(error => {
-                console.log(error);
-            });
-            if (+newPostEl.dataset.id === freshestPostId) {
-                freshestPostId = +newPostEl.nextElementSibling.dataset.id;
-            } else if (+newPostEl.dataset.id === lastSeenPostId) {
-                lastSeenPostId = newPostEl.previousElementSibling.dataset.id;
-            }
-            postsEl.removeChild(newPostEl);
+            likesHandler('dislike', item.id, likeButtonEl);
         }
-    })
+    });
     return newPostEl;
+}
+
+function likesHandler(type, id, button) {
+    fetch(`${baseUrl}/posts/${type}/${id}`, {
+        method: 'POST'
+    }).then(
+        response => {
+            if (!response.ok) {
+                throw new Error(response.statusText);
+            }
+            return response.text();
+        },
+    ).then(
+        data => {
+            button.innerHTML = `❤ ${data}`;
+        }
+    ).catch(error => {
+        console.log(error);
+    })
 }
 
 addOldPosts();
 
 setInterval(() => {
-    fetch(`${baseUrl}/posts/fresh-check/${freshestPostId}`)
+    fetch(`${baseUrl}/posts/fresh-posts-check/${freshestPostId}`)
         .then(
             response => {
                 if (!response.ok) {
                     throw new Error(response.statusText);
                 }
-                return response.json();
+                return response.text();
             }
         ).then(
             data => {
-                if (data) {
-                    addFreshPostsButtonEl.classList.remove('d-none');
-                    addFreshPostsButtonEl.classList.add('d-block');
-                };
+                if (data === 'false') {
+                    return;
+                }
+                addFreshPostsButtonEl.classList.remove('d-none');
+                addFreshPostsButtonEl.classList.add('d-block');
             }
         ).catch(error => {
             console.log(error);
