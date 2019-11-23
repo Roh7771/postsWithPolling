@@ -125,7 +125,7 @@ function oldPostsRender(data) {
         return b.id - a.id
     });
 
-    if (data.length < 3) {
+    if (data.length < 5) {
         addOldPostsButtonEl.classList.add('d-none');
         addOldPostsButtonEl.classList.remove('d-block');
         if (data.length === 0) {
