@@ -1,4 +1,5 @@
-const baseUrl = 'https://posts-on-express.herokuapp.com';
+// const baseUrl = 'https://posts-on-express.herokuapp.com';
+const baseUrl = 'http://localhost:9999';
 let freshestPostId = 0;
 let lastSeenPostId = 0;
 
@@ -125,9 +126,12 @@ function oldPostsRender(data) {
         return b.id - a.id
     });
 
-    if (data.length < 5) {
+    if (data.length < 3) {
         addOldPostsButtonEl.classList.add('d-none');
         addOldPostsButtonEl.classList.remove('d-block');
+        if (data.length === 0) {
+            return;
+        }
     } else {
         fetch(`${baseUrl}/posts/old-posts-check/${data[data.length - 1].id}`)
             .then(
@@ -160,20 +164,25 @@ function oldPostsRender(data) {
 }
 
 function freshPostsRender(data) {
-    data.sort(function (a, b) {
-        return b.id - a.id
-    });
-
-    freshestPostId = data[0].id;
-
-    for (const item of data) {
-        postsEl.insertBefore(createPost(item), postsEl.children[0]);
+    if (data.length === 0) {
+        return;
+    }
+    if (Array.isArray(data)) {
+        data.sort(function (a, b) {
+            return b.id - a.id
+        });
+        freshestPostId = data[0].id;
+        for (const item of data) {
+            postsEl.insertBefore(createPost(item), postsEl.children[0]);
+        }
+    } else {
+        freshestPostId = data.id;
+        postsEl.insertBefore(createPost(data), postsEl.children[0]);
     }
 }
 
 function createPost(item) {
     const newPostEl = document.createElement('div');
-    newPostEl.dataset.id = item.id;
     newPostEl.className = 'card mt-3';
 
     if (item.type === 'Обычный') {
@@ -183,6 +192,7 @@ function createPost(item) {
                     <p class="card-text">${item.text}</p>
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
+                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -193,6 +203,7 @@ function createPost(item) {
                 <div class="card-body">
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
+                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -205,6 +216,7 @@ function createPost(item) {
                 <div class="card-body">
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
+                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -215,6 +227,7 @@ function createPost(item) {
                 <div class="card-body">
                     <button data-action="like" class="btn btn-primary mr-2">❤ ${item.likes}</button>
                     <button data-action="dislike" class="btn btn-primary mr-2">👎</button>
+                    <button data-action="delete" class="btn btn-primary">Удалить пост</button>
                 </div>
             </div>
        `;
@@ -227,6 +240,19 @@ function createPost(item) {
             likesHandler('like', item.id, likeButtonEl);
         } else if (e.target.dataset.action === 'dislike') {
             likesHandler('dislike', item.id, likeButtonEl);
+        } else if (e.target.dataset.action === 'delete') {
+            fetch(`${baseUrl}/posts/${item.id}`, {
+                method: 'DELETE'
+            }).then(
+                response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText);
+                    }
+                },
+            ).catch(error => {
+                console.log(error);
+            });
+            postsEl.removeChild(newPostEl);
         }
     });
     return newPostEl;
