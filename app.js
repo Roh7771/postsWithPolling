@@ -1,5 +1,4 @@
-// const baseUrl = 'https://posts-on-express.herokuapp.com';
-const baseUrl = 'http://localhost:9999';
+const baseUrl = 'https://posts-on-express.herokuapp.com';
 let freshestPostId = 0;
 let lastSeenPostId = 0;
 
